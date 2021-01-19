@@ -54,9 +54,8 @@ public class SelectPictureActivity extends AppCompatActivity {
             // Android SDK >= 23, therefore we need to ask user for permission
             if (ContextCompat.checkSelfPermission(SelectPictureActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 askPermission();
-            } else {
-                browseImage();
             }
+            browseImage();
         });
 
     }
