@@ -21,6 +21,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -33,9 +34,10 @@ public class SelectPictureActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_PERMISSION = 101;
     private static final int IMAGE_CAPTURE_CODE = 102;
 
-    public Button btnChooseImage, btnTakePicture;
+    public Button btnChooseImage, btnTakePicture, btnAnalyzePicture;
     public ImageView image;
-    public String imagePath;
+    public String imagePath = "";
+    public Uri imageUri = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +47,7 @@ public class SelectPictureActivity extends AppCompatActivity {
         image = findViewById(R.id.imageView);
         btnTakePicture = findViewById(R.id.takePic);
         btnChooseImage = findViewById(R.id.choosePic);
+        btnAnalyzePicture = findViewById(R.id.analyzePic);
 
         btnTakePicture.setOnClickListener(view -> {
             openCamera();
@@ -56,6 +59,10 @@ public class SelectPictureActivity extends AppCompatActivity {
                 askPermission();
             }
             browseImage();
+        });
+
+        btnAnalyzePicture.setOnClickListener(view -> {
+            analyzePicture();
         });
 
     }
@@ -132,13 +139,16 @@ public class SelectPictureActivity extends AppCompatActivity {
             Bitmap bitmap = BitmapFactory.decodeFile(imagePath, bmpFactoryOptions);
             image.setImageBitmap(bitmap);
 
+            imageUri = null; // dereferncing uri for later call to analyze
+
         // Checks if the user chose a file
         } else if (requestCode == FILE_CHOOSE_CODE && resultCode == Activity.RESULT_OK) {
             try {
                 // Displays the selected image on the image view
-                Uri imageUri = data.getData();
+                imageUri = data.getData();
+                imagePath = "";
+
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(SelectPictureActivity.this.getContentResolver(), imageUri);
-                imagePath = imageUri.getPath();
                 image.setImageBitmap(bitmap);
 
             // Error message
@@ -148,5 +158,23 @@ public class SelectPictureActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "Failed to get Image", Toast.LENGTH_LONG).show();
         }
+    }
+
+    public void analyzePicture() {
+        if (imageUri == null && imagePath == "") {
+            Toast.makeText(this, "Please select an image", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Intent intent = new Intent(SelectPictureActivity.this, EmotionActivity.class);
+
+        // passing uri or image path to next activity
+        if (imageUri != null) {
+            intent.putExtra("URI", imageUri);
+        } else {
+            intent.putExtra("PATH", imagePath);
+        }
+
+        startActivity(intent);
     }
 }
